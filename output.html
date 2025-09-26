@@ -1,0 +1,704 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>图片批量下载</title>
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary-color: #10b981;
+            --secondary-hover: #059669;
+            --accent-color: #f59e0b;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --surface-hover: #f1f5f9;
+            --border: #e2e8f0;
+            --border-hover: #cbd5e1;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body { 
+            margin: 0; 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .page { 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh; 
+            background: var(--background);
+        }
+
+        .header { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            padding: 1.5rem 2rem; 
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            position: sticky; 
+            top: 0; 
+            z-index: 50;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .brand { 
+            display: flex; 
+            align-items: center; 
+            gap: 0.75rem; 
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--text-primary);
+        }
+
+        .brand-icon {
+            width: 2rem;
+            height: 2rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .actions { 
+            display: flex; 
+            align-items: center; 
+            gap: 0.75rem; 
+        }
+
+        .btn { 
+            background: var(--primary-color);
+            color: #fff; 
+            border: 0; 
+            padding: 0.75rem 1.5rem; 
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn:disabled:hover {
+            transform: none;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn.secondary { 
+            background: var(--secondary-color);
+        }
+
+        .btn.secondary:hover {
+            background: var(--secondary-hover);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-outline:hover {
+            background: var(--surface-hover);
+            border-color: var(--border-hover);
+        }
+
+        .toolbar { 
+            display: flex; 
+            gap: 0.75rem; 
+            align-items: center; 
+            padding: 1rem 2rem; 
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            position: sticky; 
+            top: 5rem; 
+            z-index: 40;
+        }
+
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); 
+            gap: 1.5rem; 
+            padding: 2rem; 
+            flex: 1; 
+            overflow: auto; 
+            position: relative;
+        }
+
+        .card { 
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-color);
+        }
+
+        .card.selected {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .thumb { 
+            width: 100%; 
+            aspect-ratio: 1 / 1; 
+            object-fit: cover; 
+            border-radius: var(--radius-md);
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover .thumb {
+            transform: scale(1.05);
+        }
+
+        .meta { 
+            font-size: 0.875rem; 
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 500;
+        }
+
+        .checkbox {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: var(--radius-sm);
+            border: 2px solid var(--border);
+            background: var(--surface);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .checkbox:checked {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .checkbox:checked::after {
+            content: '✓';
+            color: white;
+            font-weight: bold;
+            font-size: 0.75rem;
+        }
+
+        .footer { 
+            padding: 1.5rem 2rem; 
+            border-top: 1px solid var(--border);
+            background: var(--surface);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .select-rect { 
+            position: absolute; 
+            border: 2px dashed var(--primary-color);
+            background: rgba(99, 102, 241, 0.1);
+            pointer-events: none;
+            border-radius: var(--radius-md);
+        }
+
+        .settings { 
+            display: grid; 
+            grid-template-columns: 1fr; 
+            gap: 1rem; 
+            padding: 1.5rem 2rem; 
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .filter-section {
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .filter-header h3 {
+            margin: 0;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 0.625rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background: var(--surface);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .filter-group select {
+            cursor: pointer;
+        }
+
+        /* 筛选器区域响应式设计 */
+        @media (max-width: 768px) {
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-group {
+                margin-bottom: 0.5rem;
+            }
+        }
+
+        /* 图片信息样式 */
+        .meta {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .filename {
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .size-info {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .row { 
+            display: flex; 
+            align-items: center; 
+            gap: 1rem;
+        }
+
+        .row label {
+            font-weight: 600;
+            color: var(--text-primary);
+            min-width: 6rem;
+        }
+
+        .switch { 
+            width: 3rem; 
+            height: 1.5rem; 
+            border-radius: 1rem; 
+            background: var(--border);
+            position: relative; 
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .switch.on { 
+            background: var(--primary-color);
+        }
+
+        .switch::after { 
+            content: ""; 
+            position: absolute; 
+            top: 0.125rem; 
+            left: 0.125rem; 
+            width: 1.25rem; 
+            height: 1.25rem; 
+            background: #fff; 
+            border-radius: 50%; 
+            transition: transform 0.3s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .switch.on::after { 
+            transform: translateX(1.5rem); 
+        }
+
+        input[type="text"], input[type="number"] {
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background: var(--surface);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .stats {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            font-size: 0.875rem;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .stat-icon {
+            width: 1rem;
+            height: 1rem;
+            opacity: 0.7;
+        }
+
+        @media (max-width: 768px) {
+            .header, .toolbar, .settings, .footer {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            
+            .grid {
+                padding: 1rem;
+                grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+                gap: 1rem;
+            }
+            
+            .actions {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .btn {
+                padding: 0.625rem 1rem;
+                font-size: 0.8125rem;
+            }
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--background);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--border-hover);
+        }
+
+        /* 图片加载占位符 */
+        .thumb:not([src]) {
+            background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 2rem;
+        }
+
+        .thumb:not([src])::before {
+            content: '🖼️';
+        }
+
+        /* 空状态样式 */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 1.125rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state-subtext {
+            font-size: 0.875rem;
+            opacity: 0.7;
+        }
+
+        /* 工具提示样式 */
+        [title] {
+            position: relative;
+        }
+
+        [title]:hover::after {
+            content: attr(title);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--text-primary);
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            white-space: nowrap;
+            z-index: 1000;
+            margin-bottom: 0.5rem;
+        }
+
+        [title]:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 4px solid transparent;
+            border-top-color: var(--text-primary);
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="header">
+            <div class="brand">
+                <div class="brand-icon">📸</div>
+                <span>图片批量下载</span>
+            </div>
+            <div class="actions">
+                <button id="btn-download-selected" class="btn">
+                    <span>📥</span>
+                    下载选中
+                </button>
+                <button id="btn-download-all" class="btn secondary">
+                    <span>📦</span>
+                    下载全部
+                </button>
+            </div>
+        </div>
+        <div class="toolbar">
+            <button id="btn-select-all" class="btn btn-outline">
+                <span>☑️</span>
+                全选
+            </button>
+            <button id="btn-invert" class="btn btn-outline">
+                <span>🔄</span>
+                反选
+            </button>
+        </div>
+        <div class="settings">
+            <div class="row">
+                <label>📝 文件模板</label>
+                <input id="tpl" placeholder="{PTITLE}/P_{N0001}.{EXT}" style="flex:1" />
+                <span title="支持 {HOST} {PTITLE} {N} {N0001} {EXT}" style="color: var(--text-muted); cursor: help;">ℹ️</span>
+            </div>
+            
+            <!-- 筛选器区域 -->
+            <div class="filter-section">
+                <div class="filter-header">
+                    <h3>🔍 图片筛选</h3>
+                    <button id="btn-clear-filters" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.75rem;">
+                        <span>🗑️</span>
+                        清除筛选
+                    </button>
+                </div>
+                
+                <div class="filter-grid">
+                    <!-- 关键词筛选 -->
+                    <div class="filter-group">
+                        <label>🔤 关键词</label>
+                        <input id="kw" placeholder="按文件名或URL筛选" />
+                    </div>
+                    
+                    <!-- 图片格式筛选 -->
+                    <div class="filter-group">
+                        <label>📄 格式</label>
+                        <select id="format-filter">
+                            <option value="">全部格式</option>
+                            <option value="jpg,jpeg">JPG/JPEG</option>
+                            <option value="png">PNG</option>
+                            <option value="gif">GIF</option>
+                            <option value="webp">WebP</option>
+                            <option value="svg">SVG</option>
+                            <option value="bmp">BMP</option>
+                        </select>
+                    </div>
+                    
+                    <!-- 图片尺寸筛选 -->
+                    <div class="filter-group">
+                        <label>📏 最小尺寸</label>
+                        <input id="min-width" type="number" placeholder="宽度" style="width:6em" />
+                        <input id="min-height" type="number" placeholder="高度" style="width:6em" />
+                    </div>
+                    
+                    <!-- 图片质量筛选 -->
+                    <div class="filter-group">
+                        <label>⭐ 质量</label>
+                        <select id="quality-filter">
+                            <option value="">全部质量</option>
+                            <option value="high">高质量 (≥1000px)</option>
+                            <option value="medium">中等质量 (500-999px)</option>
+                            <option value="low">低质量 (<500px)</option>
+                        </select>
+                    </div>
+                    
+                    <!-- 来源筛选 -->
+                    <div class="filter-group">
+                        <label>🌐 来源</label>
+                        <select id="source-filter">
+                            <option value="">全部来源</option>
+                            <option value="img">IMG标签</option>
+                            <option value="background">背景图片</option>
+                        </select>
+                    </div>
+                    
+                    <!-- 域名筛选 -->
+                    <div class="filter-group">
+                        <label>🏠 域名</label>
+                        <input id="domain-filter" placeholder="按域名筛选" />
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <label>📁 下载为ZIP</label>
+                <div id="opt-zip" class="switch"></div>
+            </div>
+            <div class="row">
+                <label>⏱️ 随机延迟</label>
+                <input id="delay-min" type="number" placeholder="最小ms" style="width:8em" />
+                <input id="delay-max" type="number" placeholder="最大ms" style="width:8em" />
+                <label>⚡ 并发</label>
+                <input id="concurrency" type="number" placeholder="并发" style="width:6em" />
+                <label>🔄 重试</label>
+                <input id="retries" type="number" placeholder="次数" style="width:6em" />
+            </div>
+        </div>
+        <div id="grid" class="grid"></div>
+        <div class="footer">
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-icon">🖼️</span>
+                    <span id="count">0 张图片</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-icon">🌐</span>
+                    <span id="origin"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="zip.js" defer></script>
+    <script src="output.js" defer></script>
+</body>
+</html>
+
+

@@ -1,0 +1,40 @@
+{
+	"manifest_version": 2,
+	"name": "Page Image Collector",
+	"version": "0.1.0",
+	"description": "右键或点击图标采集当前页图片，在扩展页展示、选择并批量下载（支持ZIP）。",
+	"browser_action": {
+		"default_title": "Mini Downloader"
+	},
+	"background": {
+		"scripts": ["background.js"],
+		"persistent": false
+	},
+	"permissions": [
+		"downloads",
+		"tabs",
+		"storage",
+		"contextMenus",
+		"<all_urls>"
+	],
+	"content_scripts": [
+		{
+			"matches": ["<all_urls>"],
+			"js": ["content.js"],
+			"run_at": "document_idle",
+			"all_frames": true
+		}
+	],
+	"web_accessible_resources": [
+		"output.html",
+		"output.js"
+	],
+	"browser_specific_settings": {
+		"gecko": {
+			"id": "mini-image-downloader@example.com",
+			"strict_min_version": "78.0"
+		}
+	}
+}
+
+
